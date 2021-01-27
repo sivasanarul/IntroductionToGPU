@@ -19,7 +19,7 @@ int main(){
     clock_t t; 
     t = clock();
     // Main function
-    for(int i=0;i<n;i++){
+    for(int i=0;i<N;i++){
         c[i] = a[i] + b[i];}
     t = clock() - t; 
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
