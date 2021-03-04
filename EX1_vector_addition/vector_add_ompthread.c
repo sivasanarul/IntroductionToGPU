@@ -2,8 +2,9 @@
 #include <stdio.h>    //printf
 #include <omp.h>      //OpenMP
 #include <time.h>
+
 // Very small values for this simple illustrative example
-#define N 640000000     //Size of arrays whose elements will be added together.
+#define N 900000000     //Size of arrays whose elements will be added together.
 
 /*
  *  Classic vector addition using openMP default data decomposition.
@@ -22,7 +23,7 @@ int main (int argc, char *argv[])
 	float * b; 
 	float * c;
         
-	int n = N;                       // number of array elements
+	long int n = N;                       // number of array elements
 	int n_per_thread;                         // elements per thread
 	int total_threads;
 	# pragma omp parallel
@@ -45,22 +46,30 @@ int main (int argc, char *argv[])
             b[i] = 2.0;
         }   
         
-        
+
+
+	 // note time before execution
+	
+	
         
 	n_per_thread = n/total_threads;
-	clock_t t; 
-        t = clock();
+	clock_t start, end; 
+        start = clock();
+        
 	// determine how many elements each process will work on
 	 
         // We compute the vector addition
-	#pragma omp parallel for shared(a, b, c) private(i) schedule(static, n_per_thread)
+	#pragma omp parallel for //shared(a, b, c) schedule(static, n_per_thread)
         for(i=0; i<n; i++) {
 		c[i] = a[i]+b[i];
         }
-	t = clock() - t; 
-       double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
-  
-       printf("fun() took %f seconds to execute \n", time_taken); 
+        
+	end = clock(); 
+	double cpu_time_used;
+	
+       cpu_time_used = ((double)(end - start))/CLOCKS_PER_SEC; // in seconds 
+
+       printf("fun() took %f seconds to execute \n", cpu_time_used); 
        
        
        

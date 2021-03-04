@@ -5,7 +5,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#define N 100000000
+#define N 268435456
 
 __global__ void vector_add(float *out, float *a, float *b, int n){
      int index = threadIdx.x;

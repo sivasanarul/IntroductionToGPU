@@ -1,6 +1,6 @@
 #include <stdio.h> 
 #include <stdlib.h> 
-#define N 640000000
+#define N 100000000
 
 int main(){
     float *a, *b, *c;

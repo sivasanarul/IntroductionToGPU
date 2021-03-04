@@ -27,6 +27,8 @@ int main ( void ){
   double wtime;
   long int n_per_thread; 
   int total_threads;
+  
+  timestamp ( );
 
   printf ( "\n" );
   printf ( "MXV_OPENMP:\n" );
@@ -43,29 +45,30 @@ int main ( void ){
   printf ( "  The number of element per thread   = %d\n", n_per_thread );
   printf ( "  The matrix size N,N                = %d, %d\n", Nrow, Nrow );
 
-
-  for ( i = 0; i < mat_size; i++ )  
+  for ( i = 0; i < mat_size; i++ )
 	A[i] = 1.0;   
-	 
 
   for ( i = 0; i < Nrow; i++ )
 	x[i] = 1.0;    
 
+  wtime = omp_get_wtime ( );
   double t;
   t = mysecond();
-  
-	#pragma omp parallel for 
-	for (i=0; i<Nrow; i++)
-	{
-		sum = 0.0;
-		#pragma omp simd reduction(+:sum)
-		for (j=0; j<Nrow; j++)
+    int iter; int niter; niter = 100;
+    for (iter = 0; iter<niter;iter++)
+            { 
+		#pragma omp parallel for 
+		for (i=0; i<Nrow; i++)
 		{
-			sum+= A[i*Nrow  + j]*x[j];
+			sum = 0.0;
+			#pragma omp simd reduction(+:sum)
+			for (j=0; j<Nrow; j++)
+			{
+				sum+= A[i*Nrow  + j]*x[j];
+			}
+			b[i] =sum;
 		}
-		b[i] =sum;
-	}
-
+	     } 
   
   t = (mysecond() - t);
   printf ("\nElapsed seconds = %g\n", t );  
@@ -78,6 +81,7 @@ int main ( void ){
   printf ( "  Normal end of execution.\n" );
   
   printf ( "\n" );
+  timestamp ( );
 
   return 0;
 }
