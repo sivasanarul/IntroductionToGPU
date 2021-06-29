@@ -1,16 +1,13 @@
 #include <stdio.h>
 #include <time.h>
-#include <math.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <cuda.h>
-#include <cuda_runtime.h>
 #include <sys/time.h>
 
 #define array_size 268435456
 
 __global__ void vector_add(float *out, float *a, float *b, int n){
-     int index = blockIdx.x *blockDim.x + threadIdx.x; 
+     int index = blockIdx.x * blockDim.x + threadIdx.x; 
      if (index < n){
      out[index] = a[index] + b[index];}
 }
@@ -47,9 +44,11 @@ int main(){
     
     int block_size = 256;
     int grid_size  = (array_size + block_size) / block_size; 
+    
     t = mysecond();
     // Vector addition    
     vector_add<<<grid_size, block_size>>>(d_out, d_a, d_b, array_size);
+    cudaDeviceSynchronize();
     t = (mysecond() - t);
     printf ("\nElapsed time for vector addition in n blocks = %g\n", t ); 
     
@@ -68,15 +67,15 @@ int main(){
     free(a); 
     free(b); 
     free(out);
-
+    
+    printf ("\nBLock size (number of threads): %d \n", block_size);
+    printf ("\nNumber of blocks              : %d \n", grid_size); 
 }
 
 double mysecond()
 {
     struct timeval tp;
     struct timezone tzp;
-    int i;
-    
-    i = gettimeofday(&tp,&tzp);
+    gettimeofday(&tp,&tzp);
     return ( (double) tp.tv_sec + (double) tp.tv_usec  * 1.e-6);
 }

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include<iostream>
 #include <cuda.h>
 #include <time.h>
 #include <sys/time.h>
@@ -9,36 +8,34 @@ __global__ void matvec(float *vec, float *mat, float *out, const int N, const in
     int index = threadIdx.x;
     int stride = blockDim.x;
 
-        float sum=0;
-        for(int row=index; row<N; row+=stride){       
+        float sum = 0;
+        for(int row = index; row < N; row += stride){       
             sum = 0;
-            for(int col = 0; col<N;col++){
-                sum += vec[col]*mat[(row*N)+col];
+            for(int col = 0; col < N; col++){
+                sum += vec[col]*mat[(row*N) + col];
                 }
-            out[row]=sum;
+            out[row] = sum;
             }   
 }
 
 extern double mysecond();
 void init_array(float *a, const int N);
 void init_mat(float *a, const int N, const int M);
-void print_array(float *a, const int N, char *d);
-void print_mat(float *a, const int N, const int M, char *d);
 
 int main (void) {
 
     float *a, *b, *c, *d;
-    float *dev_a, *dev_b, *dev_c;
- 
+    float *dev_a, *dev_b, *dev_c; 
     double t;
+    
     int N= 32768;
-    int M=N;
+    int M = N;
     
     // Allocate host memory    
-    a=(float*)malloc(sizeof(float)*N);
-    b=(float*)malloc(sizeof(float)*N*M);
-    c=(float*)malloc(sizeof(float)*M);
-    d=(float*)malloc(sizeof(float)*M);
+    a = (float*)malloc(sizeof(float)*N);
+    b = (float*)malloc(sizeof(float)*N*M);
+    c = (float*)malloc(sizeof(float)*M);
+    d = (float*)malloc(sizeof(float)*M);
 
     // Initialize matrices    
     init_array(a, N);
@@ -50,97 +47,81 @@ int main (void) {
     cudaMalloc((void**)&dev_b, sizeof(float)*N*M);
     cudaMalloc((void**)&dev_c, sizeof(float)*M);
     
-    int blocksize = 32; // value usually chosen by tuning and hardware constraints
-    int nblocks   = 1;    
-    cout<<"\nblocksize         :  "<<((double)blocksize);
-    cout<<"\nnumber of blocks  :  "<<((double)nblocks);    
+    int block_size = 256; // value usually chosen by tuning and hardware constraints
+    int nblocks   = 1;      
         
     t = mysecond();
     cudaMemcpy(dev_a, a, sizeof(float)*N,   cudaMemcpyHostToDevice);
     cudaMemcpy(dev_b, b, sizeof(float)*N*M, cudaMemcpyHostToDevice);
     t = (mysecond() - t);
-    printf ("\nElapsed time for copy from host to device   = %g\n", t );
+    printf ("\nElapsed time for copy from host to device   = %g\n", t);
     
     t = mysecond();
     // matrix vector product     
-    matvec<<<1, blocksize>>>(dev_a, dev_b, dev_c, N, M);
+    matvec<<<1, block_size>>>(dev_a, dev_b, dev_c, N, M);
+    cudaDeviceSynchronize();
     t = (mysecond() - t);
-    printf ("\nElapsed time for matrix vector product in 1 block = %g\n", t );
+    printf ("\nElapsed time for matrix vector product in 1 block = %g\n", t);
 
     t = mysecond();
     // Transfer data from device to host memory    
     cudaMemcpy(c, dev_c, sizeof(float)*M, cudaMemcpyDeviceToHost);
     t = (mysecond() - t);
-    printf ("\nElapsed time for copy from device to host   = %g\n", t );
+    printf ("\nElapsed time for copy from device to host   = %g\n", t);
     
     cudaFree(dev_a);
     cudaFree(dev_b);
     cudaFree(dev_c);
 
     // verify the kernel implementation        
-    float sum=0;
-    for(int row=0;row<N;row++)
+    float sum = 0;
+    for(int row = 0;row < N;row++)
 	    {
 		sum=0;
 		for(int col=0;col<N;col++)
 		{
-		      sum=sum+b[row*N+col]*a[col];  
+		      sum = sum + b[row*N + col]*a[col];  
 		    
 		}
-	      d[row]=sum;
+	      d[row] = sum;
 	     } 
 	    
-    float error=0;
-    for(int i=0;i<N;i++)
+    float error = 0;
+    for(int i = 0;i < N;i++)
     {
-        error+=d[i]-c[i];
+        error += d[i] - c[i];
     }
     
-    cout<<"Error: "<<error;       
-    cout<<"\n\n"; 
+    printf ("\nError   = %g\n", error );
     
     // Deallocate host memory
     free(a); 
     free(b); 
     free(c);
     free(d);
+    
+    printf ("\nBLock size (number of threads): %d \n", block_size);
+    printf ("\nNumber of blocks              : %d \n", nblocks);
         
     return 0;
 };
 
 void init_array(float *a, const int N) {
         int i;
-        for(i=0; i<N; i++)
+        for(i = 0; i < N; i++)
                 a[i] = 1.0;
 }
 void init_mat(float *a, const int N, const int M) {
         int i, j;
-        for(i=0; i<N; i++)
-            for(j=0; j<M; j++)
-                    a[i*M+j] = 2.0;
-}
-void print_array(float *a, const int N, char *d) {
-        int i;
-        for(i=0; i<N; i++)
-                printf("\n%s[%d]: %f",d, i, a[i]);
-    printf("\n");
-}
-void print_mat(float *a, const int N, const int M, char *d) {
-        int i, j;
-        for(i=0; i<N; i++){
-        printf("\n%s[%d]:", d, i);
-        for (j=0; j<M; j++)
-                    printf("\t%6.4f", a[i*M+j]);
-    }
-    printf("\n");
+        for(i = 0; i < N; i++)
+            for(j = 0; j < M; j++)
+                    a[i*M + j] = 2.0;
 }
 
 double mysecond()
 {
     struct timeval tp;
     struct timezone tzp;
-    int i;
-    
-    i = gettimeofday(&tp,&tzp);
+    gettimeofday(&tp,&tzp);
     return ( (double) tp.tv_sec + (double) tp.tv_usec  * 1.e-6);
 }

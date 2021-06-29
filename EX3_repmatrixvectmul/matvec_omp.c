@@ -3,9 +3,10 @@
 # include <math.h>
 # include <time.h>
 # include <omp.h>
+#include <sys/time.h>
 
-int main ( void );
-void timestamp ( void );
+int main(void);
+
 extern double mysecond();
 
 int main ( void ){
@@ -28,7 +29,7 @@ int main ( void ){
   long int n_per_thread; 
   int total_threads;
   
-  timestamp ( );
+
 
   printf ( "\n" );
   printf ( "MXV_OPENMP:\n" );
@@ -81,19 +82,16 @@ int main ( void ){
   printf ( "  Normal end of execution.\n" );
   
   printf ( "\n" );
-  timestamp ( );
+
 
   return 0;
 }
 
-#include <sys/time.h>
 double mysecond()
 {
     struct timeval tp;
     struct timezone tzp;
-    int i;
-    
-    i = gettimeofday(&tp,&tzp);
+    gettimeofday(&tp,&tzp);
     return ( (double) tp.tv_sec + (double) tp.tv_usec  * 1.e-6);
 }
 

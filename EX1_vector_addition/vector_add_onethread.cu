@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <time.h>
-#include <math.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <cuda.h>
-#include <cuda_runtime.h>
 #include <sys/time.h>
 
 #define array_size 268435456
@@ -42,19 +39,20 @@ int main(){
     cudaMemcpy(d_a,a, sizeof(float)* array_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_b,b, sizeof(float)* array_size, cudaMemcpyHostToDevice);
     t = (mysecond() - t);
-    printf ("\nElapsed time for copy from host to device   = %g\n", t );
+    printf ("\nElapsed time for copy from host to device   = %g\n", t);
     
     t = mysecond();
     // Vector addition
     vector_add<<<1, 1>>>(d_out, d_a, d_b, array_size);
+    cudaDeviceSynchronize();
     t = (mysecond() - t);
-    printf ("\nElapsed time for vector addition in 1 thread = %g\n", t );    
+    printf ("\nElapsed time for vector addition in 1 thread = %g\n", t);    
         
     t = mysecond();
     // Transfer data from device to host memory
     cudaMemcpy(out, d_out, sizeof(float)*array_size, cudaMemcpyDeviceToHost);
     t = (mysecond() - t);
-    printf ("\nElapsed time for copy from device to host   = %g\n", t );
+    printf ("\nElapsed time for copy from device to host   = %g\n", t);
 
     // Deallocate device memory
     cudaFree(d_a);
@@ -66,15 +64,15 @@ int main(){
     free(b); 
     free(out);
 
-}
+    printf ("\nBLock size (number of thread) : 1 \n");
+    printf ("\nNumber of blocks              : 1 \n");
 
+}
 
 double mysecond()
 {
     struct timeval tp;
     struct timezone tzp;
-    int i;
-    
-    i = gettimeofday(&tp,&tzp);
+    gettimeofday(&tp,&tzp);
     return ( (double) tp.tv_sec + (double) tp.tv_usec  * 1.e-6);
 }
